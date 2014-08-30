@@ -69,6 +69,6 @@ module.exports = {
 
 };
 
-module.exports.session = {
+module.exports.jwt = {
   secret: 'YOUR_SECRET'
 };

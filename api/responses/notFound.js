@@ -29,15 +29,16 @@ module.exports = function notFound (err, viewOrRedirect) {
     if (!data) {
       return res.send();
     }
-    else {
-      if (typeof data !== 'object' || data instanceof Error) {
-        data = {error: data};
-      }
-      if ( req.options.jsonp && !req.isSocket ) {
-        return res.jsonp(data);
-      }
-      else return res.json(data);
+
+    if (typeof data !== 'object' || data instanceof Error) {
+      data = {error: data};
     }
+
+    if ( req.options.jsonp && !req.isSocket ) {
+      return res.jsonp(data);
+    }
+
+    return res.json(data);
   }
 
   // Set status code
@@ -65,10 +66,12 @@ module.exports = function notFound (err, viewOrRedirect) {
       if (sails.util.isArray(value)) {
         return sails.util.map(value, readabilify);
       }
-      else if (sails.util.isPlainObject(value)) {
+
+      if (sails.util.isPlainObject(value)) {
         return sails.util.inspect(value);
       }
-      else return value;
+
+      return value;
     };
     locals = { error: readabilify(err) };
   }
@@ -78,13 +81,20 @@ module.exports = function notFound (err, viewOrRedirect) {
     if (viewOrRedirect.match(/^(\/|http:\/\/|https:\/\/)/)) {
       return res.redirect(viewOrRedirect);
     }
-    else return res.view(viewOrRedirect, locals, function viewReady(viewErr, html) {
-      if (viewErr) return sendJSON(err);
-      else return res.send(html);
+
+    return res.view(viewOrRedirect, locals, function viewReady(viewErr, html) {
+      if (viewErr) {
+        return sendJSON(err);
+      }
+
+      return res.send(html);
     });
   }
-  else return res.view('404', locals, function viewReady(viewErr, html) {
-    if (viewErr) return sendJSON(err);
-    else return res.send(html);
+  return res.view('404', locals, function viewReady(viewErr, html) {
+    if (viewErr) {
+      return sendJSON(err);
+    }
+
+    return res.send(html);
   });
 };
