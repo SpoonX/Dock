@@ -6,6 +6,13 @@
  */
 
 module.exports = {
-	
-};
+  publish : function (req, res) {
+    pageService.save(req.token.website, req.param('page'), req.param('body'), function (error) {
+      if (error) {
+        return res.negotiate(error);
+      }
 
+      return res.ok();
+    });
+  }
+};

@@ -18,9 +18,13 @@ module.exports.policies = {
 
   // Default policy for all controllers and actions
   // (`true` allows public access)
-  '*': true,
+  '*': false,
 
-	UserController: {
-    getIdentity : 'VerifyToken'
+  UserController   : {
+    getIdentity : 'VerifyToken',
+    authenticate: true
+  },
+  WebsiteController: {
+    publish: 'VerifyToken'
   }
 };

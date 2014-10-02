@@ -22,7 +22,7 @@ module.exports = function (req, res, next) {
   }
 
   // Verify JWT token via service
-  sails.services.jwtservice.verifyToken(token, function (error, token) {
+  jwtService.verifyToken(token, function (error, token) {
     if (error) {
       return res.forbidden('invalid_token');
     }

@@ -1,5 +1,4 @@
-var jwt       = require('jsonwebtoken');
-    //socketjwt = require('socketio-jwt');
+var jwt = require('jsonwebtoken');
 
 module.exports.issueToken = function (payload) {
   return jwt.sign(payload, sails.config.jwt.secret);
