@@ -15,6 +15,13 @@ module.exports = {
     users         : {
       collection: 'user',
       via       : 'websites'
+    },
+    toJSON : function () {
+      var object = this.toObject();
+
+      return {
+        host: object.host
+      };
     }
   }
 };
