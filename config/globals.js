@@ -12,6 +12,6 @@ module.exports.globals = {
 	_: true,
 	async:  true,
 	sails: true,
-	services: false,
+	services: true,
 	models: false
 };
