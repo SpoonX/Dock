@@ -104,7 +104,6 @@ module.exports = {
   },
 
   put: function (connection, input, fileName, callback) {
-    console.log('Creating put for ', this.lfiStrip(fileName));
     connection.put(input, this.lfiStrip(fileName), callback);
   },
 
