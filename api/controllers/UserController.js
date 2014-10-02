@@ -15,7 +15,9 @@ module.exports = {
         return res.badRequest('missing_param', missing);
       }
 
-      sails.models.user.findOne({username: params.username, password: params.password}, function (error, user) {
+      var find = sails.models.user.findOne({username: params.username, password: params.password}).populate('websites');
+
+      find.exec(function (error, user) {
         if (error) {
           return res.negotiate(error);
         }
@@ -24,9 +26,20 @@ module.exports = {
           return res.badRequest('invalid_credentials');
         }
 
-        res.ok({
-          token: sails.services.jwtservice.issueToken({user: user.id})
-        });
+        var authResponse = {},
+          tokenData = {};
+
+        if (user.websites.length === 1) {
+          authResponse.website = tokenData.website = user.websites[0].id;
+        } else {
+          authResponse.websites = tokenData.websites = user.websites;
+        }
+
+        tokenData.user = user.id;
+
+        authResponse.token = jwtService.issueToken(tokenData);
+
+        res.ok(authResponse);
       });
     });
   },
