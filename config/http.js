@@ -18,19 +18,17 @@ module.exports.http = {
     order: [
       'startRequestTimer',
       'cookieParser',
-      'session',
       'bodyParser',
       'handleBodyParserError',
       'compress',
       'methodOverride',
-      'poweredBy',
       '$custom',
       'router',
       'www',
       'favicon',
       '404',
       '500'
-    ],
+    ]
 
     // The body parser that will handle incoming multipart HTTP requests.
     // By default as of v0.10, Sails uses [skipper](http://github.com/balderdashy/skipper).
