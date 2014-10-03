@@ -1,1 +1,7 @@
-{ "hooks": { "grunt": false }}
+{
+  "hooks": {
+    "grunt"  : false,
+    "i18n"   : false,
+    "views"  : false
+  }
+}

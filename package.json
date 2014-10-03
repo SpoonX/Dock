@@ -10,7 +10,7 @@
     "jsonwebtoken": "^1.1.0",
     "rc": "~0.3.3",
     "request-helpers": "0.0.1",
-    "sails": "~0.10.5",
+    "sails": "^0.10.5",
     "sails-mysql": "^0.10.6",
     "trumpet": "^1.6.6"
   },
