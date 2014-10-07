@@ -1,7 +1,7 @@
 module.exports.connections = {
   mysqlLocal: {
     adapter : 'sails-mysql',
-    user    : 'dock',
+    user    : 'root',
     password: '',
     host    : 'localhost',
     database: 'dock'
