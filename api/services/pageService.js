@@ -1,5 +1,7 @@
 var trumpet = require('trumpet'),
-    Client  = require('ftp');
+    md5     = require('MD5'),
+    path    = require('path'),
+    fs      = require('fs');
 
 function createContentManipulationStreams (trumpetStream, content) {
   var k;
@@ -12,6 +14,7 @@ function createContentManipulationStreams (trumpetStream, content) {
 module.exports = {
   save: function (website, page, content, done) {
     var trumpetStream = trumpet(),
+        tmpFileName = path.join(process.cwd(), 'tmp', md5(website.host + (new Date()).getTime().toString() + page)),
         filename,
         connection;
 
@@ -43,36 +46,50 @@ module.exports = {
 
       // Get a readStream for the file.
       function (callback) {
-        connection.get(filename, callback);
+        connection.get(filename, function (error, stream) {
+          if (error) {
+            return callback(error);
+          }
+
+          stream.once('close', function() {
+            callback(null);
+          });
+
+          stream.pipe(fs.createWriteStream(tmpFileName));
+        });
       },
 
-      // Manipulate the data coming in through trumpet, and pipe it back to the server through `.put()`.
-      function (fileStream, callback) {
-        var manipulated = '';
+      // Manipulate the data coming in through trumpet, and pipe it to a new file
+      function (callback) {
+        trumpetStream.pipe(fs.createWriteStream(tmpFileName+'.new'));
 
-        // Workaround to keep `trumpet` from automatically resume()'ing
-        //trumpetStream._piping = true;
-
-        trumpetStream.on('data', function (buffer) {
-          manipulated += buffer.toString();
-        });
-
-        // Once done, resume.
         trumpetStream.on('end', function () {
-          callback(null, manipulated);
+
+          // Done manipulating. Let's go forth.
+          callback(null);
         });
 
         // Manipulate the content based on what we got.
         createContentManipulationStreams(trumpetStream, content);
 
-        // Pipe remote file through trumpet for manipulations.
-        fileStream.pipe(trumpetStream);
+        // Get the data to manipulate from the file we just fetched,
+        fs.createReadStream(tmpFileName).pipe(trumpetStream);
       },
 
       // Now stream the entirety to `connection.put()`
-      function (manipulated, callback) {
+      function (callback) {
         // Pipe manipulated stream back to `filename + '.new'`
-        connection.put(manipulated, filename + '.new', callback);
+        connection.put(tmpFileName+'.new', filename + '.new', callback);
+      },
+
+      // Cleanup
+      function (callback) {
+        fs.unlink(tmpFileName, callback);
+      },
+
+      // Cleanup
+      function (callback) {
+        fs.unlink(tmpFileName+'.new', callback);
       },
 
       // Now rename the current file to something else, just to play it safe.
