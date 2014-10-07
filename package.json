@@ -5,6 +5,7 @@
   "description": "Picnicx backend",
   "keywords": [],
   "dependencies": {
+    "MD5": "^1.2.1",
     "forever": "^0.11.1",
     "ftp": "^0.3.7",
     "jsonwebtoken": "^1.1.0",
