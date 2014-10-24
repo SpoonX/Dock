@@ -26,5 +26,9 @@ module.exports.policies = {
   },
   WebsiteController: {
     publish: 'VerifyToken'
+  },
+
+  MediaController: {
+    '*': 'VerifyToken'
   }
 };
