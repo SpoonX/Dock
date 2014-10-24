@@ -6,10 +6,11 @@ var path = require('path'),
     config;
 
 module.exports = self = {
+
   /**
    * @param sailsApp
    */
-  __construct : function (sailsApp) {
+  __construct: function (sailsApp) {
     sails        = sailsApp;
     config       = sails.config.media;
     mediaModel   = sails.models.media;
@@ -24,93 +25,101 @@ module.exports = self = {
    */
   upload: function (req, res) {
 
-    var website       = req.token.website,
-        uploadedFiles = [];
+    var website = req.token.website,
+        uploadedFiles = [],
+        websiteInstance,
+        file,
+        tmpFile;
 
-    // Upload the file, skipper!
-    req.file('media').upload(function (error, files) {
-      var file, tmpFile;
+    async.waterfall([
+      function (callback) {
+        websiteModel.findOne(website).exec(callback);
+      },
 
-      // Make sure upload succeeded.
-      if (error) {
-        return res.negotiate(error);
-      }
+      function (result, callback) {
+        websiteInstance = result;
 
-      // Pop through all uploaded files.
-      (function next() {
-        file    = files.pop();
-        tmpFile = file.fd;
+        callback(null);
+      },
 
-        // Make sure the file isn't too big.
-        if (file.size > config.maxFileSize) {
-          return fs.unlink(tmpFile, function () {
-            res.badRequest(
-              'file_too_large', 'The supplied file is too large. Limit set to ' + config.maxFileSize + ' bytes.'
-            );
-          });
-        }
+      function (callback) {
+        req.file('media').upload(callback);
+      },
 
-        // Make sure the file is not a duplicate.
-        mediaModel.find({filename: file.filename, website : website}, function (error, result) {
+      function (files, done) {
+        (function next () {
+          file = files.pop();
+          tmpFile = file.fd;
 
-          // Somehow the query failed.
-          if (error) {
-            return res.negotiate(error);
+          // Make sure the file isn't too big.
+          if (file.size > config.maxFileSize) {
+            return fs.unlink(tmpFile, function () {
+              done('file_too_large');
+            });
           }
 
-          // The result isn't empty. Duplicate file!
-          if (result.length > 0) {
-            return res.badRequest('duplicate_file', 'A file by the name "' + file.filename + '" already exists.');
-          }
+          async.waterfall([
+            function (callback) {
+              mediaModel.find({filename: file.filename, website: website}).exec(callback);
+            },
 
-          websiteModel.findOne(website, function (error, website) {
+            function (result, callback) {
+              if (result.length > 0) {
+                return callback('duplicate_file');
+              }
+
+              callback(null, websiteInstance);
+            },
+
+            ftpService.getConnection,
+
+            function (connection, callback) {
+              connection.put(
+                tmpFile,
+                path.join(
+                  websiteInstance.root_directory,
+                  websiteInstance.media_directory,
+                  file.filename
+                ),
+                callback
+              );
+            },
+
+            function (callback) {
+              mediaModel.create({
+                filename : file.filename,
+                size     : file.size,
+                mime_type: file.type,
+                website  : websiteInstance.id
+              }, callback);
+            },
+
+            function (model, callback) {
+              uploadedFiles.push(model);
+
+              fs.unlink(tmpFile, callback);
+            }
+          ], function (error) {
             if (error) {
               return res.negotiate(error);
             }
 
-            ftpService.getConnection(website, function (error, connection) {
-              if (error) {
-                return res.negotiate(error);
-              }
+            // Still some files left. Let's continue working on those.
+            if (files.length > 0) {
+              return next();
+            }
 
-              var mediaDirectory = website.media_directory ? website.media_directory : 'media';
-
-              connection.put(tmpFile, path.join(website.root_directory, mediaDirectory, file.filename), function (error) {
-                if (error) {
-                  return res.negotiate(error);
-                }
-
-                mediaModel.create({
-                  filename : file.filename,
-                  size     : file.size,
-                  mime_type: file.type,
-                  website  : website.id
-                }, function (error, model) {
-                  if (error) {
-                    return res.negotiate(error);
-                  }
-
-                  return fs.unlink(tmpFile, function (error) {
-                    if (error) {
-                      return res.negotiate(error);
-                    }
-
-                    uploadedFiles.push(model);
-
-                    // Still some files left. Let's continue working on those.
-                    if (files.length > 0) {
-                      return next();
-                    }
-
-                    // All done. Notify the user about the cool shit we've done.
-                    res.ok(uploadedFiles);
-                  });
-                });
-              });
-            });
+            // All done. Notify the user about the cool shit we've done.
+            done();
           });
-        });
-      })();
+        })();
+      }
+    ], function (error) {
+      if (error) {
+        return res.negotiate(error);
+      }
+
+      res.ok({files: uploadedFiles});
     });
   }
 };
