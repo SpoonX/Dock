@@ -10,8 +10,6 @@
  */
 
 module.exports.bootstrap = function(cb) {
-
-
   // Provide services with __construct sugar.
   _.forOwn(sails.services, function (service) {
     if (typeof service.__construct === 'function') {
