@@ -1,5 +1,6 @@
 module.exports = function serverError(data, details) {
 
+  sails.log.error('Full error arguments: ', data, details);
   // Get access to `res`
   var res = this.res;
 
@@ -7,10 +8,10 @@ module.exports = function serverError(data, details) {
   res.status(500);
 
   // Log error to console
-  this.req._sails.log.error('Sent 500 ("Server Error") response');
+  sails.log.error('Sent 500 ("Server Error") response');
 
   if (details) {
-    this.req._sails.log.error(details); // Log the error details.
+    sails.log.error(details); // Log the error details.
   }
 
   if (!data) {
