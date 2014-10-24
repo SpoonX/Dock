@@ -11,6 +11,14 @@
 
 module.exports.bootstrap = function(cb) {
 
+
+  // Provide services with __construct sugar.
+  _.forOwn(sails.services, function (service) {
+    if (typeof service.__construct === 'function') {
+      service.__construct(sails);
+    }
+  });
+
   // It's very important to trigger this callack method when you are finished
   // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
   cb();
