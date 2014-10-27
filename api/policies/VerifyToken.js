@@ -21,8 +21,8 @@ module.exports = function (req, res, next) {
     return res.forbidden('invalid_token', 'No Authorization header was found');
   }
 
-  delete req.body.token;
-  delete req.query.token;
+  req.body && delete req.body.token;
+  req.query && delete req.query.token;
 
   // Verify JWT token via service
   jwtService.verifyToken(token, function (error, token) {
