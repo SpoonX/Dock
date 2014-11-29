@@ -35,8 +35,7 @@ module.exports = {
           authResponse.websites = tokenData.websites = user.websites;
         }
 
-        tokenData.user = user.id;
-
+        tokenData.user     = user.id;
         authResponse.token = jwtService.issueToken(tokenData);
 
         res.ok(authResponse);
