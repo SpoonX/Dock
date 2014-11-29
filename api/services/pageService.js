@@ -14,7 +14,8 @@ function createContentManipulationStreams (trumpetStream, content) {
 module.exports = {
   save: function (website, page, content, done) {
     var trumpetStream = trumpet(),
-        tmpFileName = path.join(process.cwd(), 'tmp', md5(website.host + (new Date()).getTime().toString() + page)),
+        websiteId     = typeof website === 'object' ? website.id : website,
+        tmpFileName   = path.join(process.cwd(), 'tmp', md5(websiteId.toString() + (new Date()).getTime().toString() + page)),
         filename,
         connection;
 
