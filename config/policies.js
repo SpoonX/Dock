@@ -29,6 +29,7 @@ module.exports.policies = {
   },
 
   MediaController: {
-    '*': 'VerifyToken'
+    '*' : 'VerifyToken',
+    find: ['VerifyToken', 'SetWebsite']
   }
 };
