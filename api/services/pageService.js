@@ -15,6 +15,7 @@ module.exports = {
   save: function (website, page, content, done) {
     var trumpetStream = trumpet(),
         tmpFileName = path.join(process.cwd(), 'tmp', md5(website.host + (new Date()).getTime().toString() + page)),
+        revision,
         filename,
         connection;
 
@@ -51,7 +52,7 @@ module.exports = {
             return callback(error);
           }
 
-          stream.once('close', function() {
+          stream.once('close', function () {
             callback(null);
           });
 
@@ -59,9 +60,26 @@ module.exports = {
         });
       },
 
-      // Manipulate the data coming in through trumpet, and pipe it to a new file
+      // Now read the contents of the new file...
       function (callback) {
-        trumpetStream.pipe(fs.createWriteStream(tmpFileName+'.new'));
+        fs.readFile(tmpFileName, callback);
+      },
+
+      // ... So we can create a revision.
+      function (fileContent, callback) {
+        sails.models.revision.create({
+          website: website,
+          content: fileContent,
+          page   : filename
+        }, callback);
+      },
+
+      // Manipulate the data coming in through trumpet, and pipe it to a new file
+      function (revisionInstance, callback) {
+
+        revision = revisionInstance;
+
+        trumpetStream.pipe(fs.createWriteStream(tmpFileName + '.new'));
 
         trumpetStream.on('end', function () {
 
@@ -79,7 +97,7 @@ module.exports = {
       // Now stream the entirety to `connection.put()`
       function (callback) {
         // Pipe manipulated stream back to `filename + '.new'`
-        connection.put(tmpFileName+'.new', filename + '.new', callback);
+        connection.put(tmpFileName + '.new', filename + '.new', callback);
       },
 
       // Cleanup
@@ -89,7 +107,7 @@ module.exports = {
 
       // Cleanup
       function (callback) {
-        fs.unlink(tmpFileName+'.new', callback);
+        fs.unlink(tmpFileName + '.new', callback);
       },
 
       // Now rename the current file to something else, just to play it safe.
@@ -108,7 +126,10 @@ module.exports = {
         return done(error);
       }
 
-      done(null);
+      done(null, {
+        createdAt: revision.createdAt,
+        id       : revision.id
+      });
     });
   }
 };
