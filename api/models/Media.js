@@ -10,6 +10,9 @@ module.exports = {
       model: 'website'
     },
     size     : 'integer',
-    mime_type: 'string'
+    mime_type: {
+      type : 'string',
+      index: true
+    }
   }
 };
