@@ -77,7 +77,6 @@ module.exports = self = {
               connection.put(
                 tmpFile,
                 path.join(
-                  websiteInstance.root_directory,
                   websiteInstance.media_directory,
                   file.filename
                 ),
