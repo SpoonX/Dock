@@ -59,10 +59,11 @@ module.exports = {
     function returnConnection (website, callback) {
 
       website = {
-        host    : website.host,
-        port    : website.port,
-        user    : website.user,
-        password: website.password
+        host          : website.host,
+        port          : website.port,
+        user          : website.user,
+        password      : website.password,
+        root_directory: website.root_directory
       };
 
       if (connections[website.host]) {
@@ -72,7 +73,13 @@ module.exports = {
       var client = connections[website.host] = new Client();
 
       client.on('ready', function () {
-        callback(null, client);
+        client.cwd(website.root_directory, function (error) {
+          if (error) {
+            return callback(error);
+          }
+
+          callback(null, client);
+        });
       });
 
       client.on('close', function () {
