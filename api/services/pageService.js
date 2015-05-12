@@ -103,7 +103,9 @@ module.exports = {
         connection.rename(filename + '.new', filename, callback);
       }
     ], function (error) {
-      connection.end(); // All done, no need to maintain the connection.
+      if (connection) {
+        connection.end(); // All done, no need to maintain the connection.
+      }
 
       if (error) {
         return done(error);
